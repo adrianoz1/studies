@@ -1,5 +1,9 @@
-import { createContext, ReactNode } from "react";
+import { createContext, ReactNode, useState, useEffect } from "react";
+import * as Google from "expo-auth-session/providers/google";
+import * as AuthSession from "expo-auth-session";
+import * as WebBrowser from "expo-web-browser";
 
+WebBrowser.maybeCompleteAuthSession();
 interface UserProps {
   name: string;
   avatarUrl: string;
@@ -7,6 +11,7 @@ interface UserProps {
 
 export interface AuthContextDataProps {
   user: UserProps;
+  isUserLoading: boolean;
   signIn: () => Promise<void>;
 }
 interface AuthProviderProps {
@@ -16,22 +21,50 @@ interface AuthProviderProps {
 export const AuthContext = createContext({} as AuthContextDataProps);
 
 export function AuthContextProvider({ children }: AuthProviderProps) {
-  
+  const [isUserLoading, setIsUserLoading] = useState(false);
+  const [user, setUser] = useState<UserProps>({} as UserProps);
+
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId:
+      "298555679851-bki1ohb37rq4bd86iqtkcaqd1kjls3sd.apps.googleusercontent.com",
+    redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
+    scopes: ["profile", "email"],
+  });
+
   async function signIn() {
-    console.log('vamos logar');
+    try {
+      setIsUserLoading(true);
+      await promptAsync();
+    } catch (err) {
+      console.log(err);
+      throw err;
+    } finally {
+      setIsUserLoading(false);
+    }
   }
+
+  async function signInWithGoogle(access_token: string) {
+    console.log("tojen: ", access_token);
+  }
+  
+  useEffect(() => {
+    if (response?.type === "success" && response.authentication?.accessToken) {
+      signInWithGoogle(response.authentication.accessToken);
+    }
+  }, [response]);
 
   return (
     <AuthContext.Provider
       value={{
         signIn,
-        user: {
-          name: "Adriano",
-          avatarUrl: "http://github.com/adrianoz1.png",
-        },
+        isUserLoading,
+        user,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 }
+
+//
+//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
