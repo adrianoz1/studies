@@ -55,21 +55,19 @@ export async function authRoutes(fastify: FastifyInstance) {
           avatarUrl: userInfo.picture,
         },
       });
-
-      const token = await fastify.jwt.sign(
-        {
-          name: user?.name,
-          avatarUrl: user?.avatarUrl,
-        },
-        {
-          sub: user?.id,
-          expiresIn: "7 days",
-        }
-      );
-
-      return { token };
     }
 
-    return { userInfo };
+    const token = await fastify.jwt.sign(
+      {
+        name: user?.name,
+        avatarUrl: user?.avatarUrl,
+      },
+      {
+        sub: user?.id,
+        expiresIn: "7 days",
+      }
+    );
+
+    return { token };
   });
 }

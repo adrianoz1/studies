@@ -2,7 +2,7 @@ import { createContext, ReactNode, useState, useEffect } from "react";
 import * as Google from "expo-auth-session/providers/google";
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
-
+import { api } from "../services/api";
 WebBrowser.maybeCompleteAuthSession();
 interface UserProps {
   name: string;
@@ -25,8 +25,7 @@ export function AuthContextProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<UserProps>({} as UserProps);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId:
-      "298555679851-bki1ohb37rq4bd86iqtkcaqd1kjls3sd.apps.googleusercontent.com",
+    clientId: process.env.CLIENT_ID,
     redirectUri: AuthSession.makeRedirectUri({ useProxy: true }),
     scopes: ["profile", "email"],
   });
@@ -44,9 +43,24 @@ export function AuthContextProvider({ children }: AuthProviderProps) {
   }
 
   async function signInWithGoogle(access_token: string) {
-    console.log("tojen: ", access_token);
+    try {
+      setIsUserLoading(true);
+      const response = await api.post("/users", { access_token });
+      console.log(response)
+      api.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${response.data.token}`;
+
+      const userInfoResponse = await api.get("/me");
+      setUser(userInfoResponse.data.user);
+    } catch (e) {
+      console.log(e);
+      throw e;
+    } finally {
+      setIsUserLoading(false);
+    }
   }
-  
+
   useEffect(() => {
     if (response?.type === "success" && response.authentication?.accessToken) {
       signInWithGoogle(response.authentication.accessToken);
@@ -65,6 +79,3 @@ export function AuthContextProvider({ children }: AuthProviderProps) {
     </AuthContext.Provider>
   );
 }
-
-//
-//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

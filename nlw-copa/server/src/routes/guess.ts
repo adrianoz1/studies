@@ -30,6 +30,7 @@ export async function guessRoutes(fastify: FastifyInstance) {
       const { firstTeamPoints, secondTeamPoints } = createGuessBody.parse(
         request.body
       );
+
       const participant = await prisma.participant.findUnique({
         where: {
           userId_poolId: {
@@ -41,7 +42,7 @@ export async function guessRoutes(fastify: FastifyInstance) {
 
       if (!participant) {
         return reply.status(400).send({
-          message: "You´re not allowed to create a guess inside this pool",
+          message: "You're not allowed to create a guess inside this pool.",
         });
       }
 
@@ -56,7 +57,7 @@ export async function guessRoutes(fastify: FastifyInstance) {
 
       if (guess) {
         return reply.status(400).send({
-          message: "You already sent a guess to this game on this pool",
+          message: "You already sent a guess to this game on this pool.",
         });
       }
 
@@ -68,7 +69,7 @@ export async function guessRoutes(fastify: FastifyInstance) {
 
       if (!game) {
         return reply.status(400).send({
-          message: "Game not found",
+          message: "Game not found.",
         });
       }
 
